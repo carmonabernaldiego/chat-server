@@ -25,10 +25,12 @@ let text_color = 1
 
 //  Server Listeners
 server.on('connection', (client) => {
+    //  Verificamos si esta baneado
     if (firewall(client)) {
         return
     }
 
+    //  Establecemos el tiempo máximo de inactividad
     users[client.remoteAddress] = client
     client.setTimeout(60 * 3000)
 
@@ -72,7 +74,7 @@ server.on('connection', (client) => {
         // Se envia mensaje a todos los hosts
         sayEveryone(`${sayServer('El usuario')} ${printName(client)} ${sayServer('se ha eliminado por inactividad')}`, `${sayServer('El usuario')} ${client.remoteAddress} [${printName(client)}] ${sayServer('se ha eliminado por inactividad')}`)
         //  Eliminar usuario por inactividad
-        kick(client.remoteAddress, true)
+        eject(client.remoteAddress, true)
     })
 
     //  Se ejecuta al salir del servidor
@@ -165,97 +167,129 @@ function sayServer(message) {
 
 //  Función para comunicarse con el Servidor y los Clientes
 function sayEveryone(messageClient, messageServer = messageClient, except) {
+    //  Nuevos usuarios
     for (const key in users) {
-        if (users[key].remoteAddress === except) continue
-        users[key].write('\x1b[0m' + messageClient + '\n')
+        if (users[key].remoteAddress === except) {
+            users[key].write(messageClient)
+        }
     }
-    console.log('\x1b[0m' + messageServer.trim())
+    //  Compartir mensajes
+    console.log(messageServer.trim())
 }
 
+//  Función para verificar usuarios baneados
 function firewall(user) {
+    //  Verificar que el usuario no este baneado del servidor 
     if (banned_users.includes(user.remoteAddress)) {
-        user.write(`\x1b[31m\x1b[1mHas sido baneado de este servidor\x1b[0m`)
+        //  Eliminar usuario
+        user.write(`¡Baneado del servidor!`)
         user.destroy()
         return true
     }
     return false
 }
 
+//  Función para mostrar usuarios baneados
 function listBanned() {
     console.table(banned_users)
 }
 
-function kick(ip, silentMode = true) {
+//  Función para expulsar un usuario del servidor
+function eject(ip, inactive = true) {
+    //  Verifica que el usuario ingrese la [IP]
     if (ip === undefined) {
-        console.log('No se ha proporcionado una IP para kickear')
+        console.log('No ha ingresado una [IP] a expulsar')
         return false
     }
+    //  Verifica que la [IP] este definida
     if (info_users[ip] === undefined) {
-        console.log(`No hay ningún usuario con la ip [${ip}]`)
+        console.log(`No existe ningún usuario con la [IP] -> [${ip}]`)
         return false
     }
-    if (!silentMode) {
-        sayEveryone(`${sayServer('El usuario')} ${printName(users[ip])} ${sayServer('ha sido removido por el servidor')}`)
+    //  Expulsa al usuario del servidor por inactividad
+    if (!inactive) {
+        sayEveryone(`${sayServer('El usuario:')} ${printName(users[ip])} ${sayServer('ha sido expulsado del servidor')}`)
     }
 
+    //  Eliminar usuario por [IP]
     users[ip].destroy()
     delete users[ip]
     return true
 }
 
-function kickAll() {
+//  Función para expulsar a todos los usuarios del servidor
+function ejectAll() {
+    //  Comprobamos que existan usuarios
     if (Object.keys(users).length > 0) {
+        //  Recorremos la lista de usuarios para expulsarlos
         for (const key in users) {
-            kick(key)
-            console.log(`${key} ha sido kickeado`)
+            //  Hacemos uso de nuestra función expulsar para reutilizar código
+            eject(key)
+            //  Mostramos que el usuario fue expulsado
+            console.log(`${key} expulsado`)
         }
         return
     }
-    console.log('Todos los usuarios han sido eliminados')
+    //  Indicamos que los usuarios se eliminaron correctamente
+    console.log('Usuarios eliminados')
 }
 
+//  Función para banear a un usuario del servidor
 function ban(ip) {
-    if (kick(ip)) {
+    //  Primero expulsamos al usuario y comprobamos si fue eliminado
+    if (eject(ip)) {
+        //  Procedemos a eliminar y lo ingresamos a la lista negra
         delete info_users[ip]
         banned_users.push(ip)
-        sayEveryone(`\x1b[31m\x1b[1m${ip} ha sido baneado del servidor\x1b[0m`)
+        //  Informamos que el usuario fue baneado
+        sayEveryone(`${ip} ¡Baneado del servidor!`)
     }
 }
 
+// Función para quitar baneo de un usuario del servidor
 function unban(ip) {
+    //  Verifica que el usuario ingrese la [IP]
     if (ip === undefined) {
-        console.log('Asigne un IP para remover de la lista negra')
+        console.log('No ha ingresado una [IP] para remover de la lista negra del servidor')
         return
     }
+    //  Verifica que la [IP] este definida en la lista de usuarios
     if (!banned_users.includes(ip)) {
-        console.log(`No hay ningún usuario con IP [${ip}] en la lista negra del servidor`)
+        console.log(`No existe ningún usuario con la [IP] -> [${ip}] en la lista negra del servidor`)
         return
     }
 
+    //  Quitamos de la lista negra del servidor al usuario baneado
     banned_users = banned_users.filter((banned) => {
         if (banned === ip) {
-            console.log(`El usuario con IP [${ip}] ha sido perdonado`)
+            //  Mostramos al usuario baneado
+            console.log(`El usuario con [IP] -> [${ip}] fue desbaneado`)
             return
         }
         return banned
     })
 }
 
+//  Función para finalizar conexión con el servidor
 function exit() {
-    kickAll()
+    //  Expulsamos a todos los usuarios
+    ejectAll()
+    //  Cerramos conexión con el servidor
     server.close()
+    //  Mostramos que el servicio a finalizado
     console.log('Servidor finalizado')
     process.exit(0)
 }
 
-//  Launch Server 
+//  Ejecutamos el servidor 
 server.listen(port, host, () => {
     //  Mostrar el mensaje de bienvenida del servidor
     console.info(`
-    [- Servidor TCP IP Iniciado -]
-    IP: ${server.address().address}
-    PORT: ${server.address().port}
-    Presione -a para ver la lista de comandos
+    +-+-+-+    Servidor TCP IP Iniciado    +-+-+-+
+    | IP: ${server.address().address}            |
+    | PORT: ${server.address().port}             |
+    | Presione -a para ver la lista de comandos  |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
     `)
 })
 
@@ -268,9 +302,9 @@ server.on('listening', () => {
                 break;
             case '-lub': listBanned()
                 break;
-            case '-dip': kick(data[1], false)
+            case '-dip': eject(data[1], false)
                 break;
-            case '-dipall': kickAll()
+            case '-dipall': ejectAll()
                 break;
             case '-bip': ban(data[1])
                 break;

@@ -2,7 +2,7 @@ import net from 'net'
 
 //  Configuración del servidor
 const port = 3000
-const host = "192.168.1.65"
+const host = "192.168.89.233"
 //  Socket que se conecta con el servidor
 const client = new net.Socket()
 
