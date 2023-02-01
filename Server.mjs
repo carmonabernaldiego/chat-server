@@ -20,9 +20,6 @@ const users = {}
 const info_users = {}
 let banned_users = []
 
-// Color texto predeterminado
-let text_color = 1
-
 //  Server Listeners
 server.on('connection', (client) => {
     //  Verificamos si esta baneado
@@ -36,14 +33,7 @@ server.on('connection', (client) => {
 
     // Si es nuevo el usuario asignamos la IP como nombre de usuario
     if (info_users[client.remoteAddress] === undefined) {
-        info_users[client.remoteAddress] = { username: client.remoteAddress, color: `\x1b[3${text_color}m` }
-        if (text_color === 3) {
-            text_color = 4
-        }
-        if (text_color > 7) {
-            text_color = 0
-        }
-        text_color++
+        info_users[client.remoteAddress] = { username: client.remoteAddress }
     }
 
     // Informamos la llegada de un nuevo usuario
@@ -154,10 +144,13 @@ function commandsUser(data, client) {
     })
 }
 
-/* ## FUNCIONES DE ESTILIZADO ## */
+//  Función para mostrar nombre de usuario
 function printName(client, message) {
-    if (message == undefined) message = info_users[client.remoteAddress].username
-    return `${info_users[client.remoteAddress].color}\x1b[1m${message}\x1b[0m`
+    //  Comprobamos que el usuario haya ingresado un mensaje
+    if (message === undefined) {
+        message = info_users[client.remoteAddress].username
+    }
+    return `${message}`
 }
 
 //  Función para comunicarse con el Servidor
@@ -169,9 +162,8 @@ function sayServer(message) {
 function sayEveryone(messageClient, messageServer = messageClient, except) {
     //  Nuevos usuarios
     for (const key in users) {
-        if (users[key].remoteAddress === except) {
-            users[key].write(messageClient)
-        }
+        if (users[key].remoteAddress === except) continue
+        users[key].write(messageClient)
     }
     //  Compartir mensajes
     console.log(messageServer.trim())
