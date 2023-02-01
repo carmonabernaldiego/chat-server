@@ -252,10 +252,10 @@ function exit() {
 server.listen(port, host, () => {
     //  Mostrar el mensaje de bienvenida del servidor
     console.info(`
-    \n[- Servidor TCP IP Iniciado -]
+    [- Servidor TCP IP Iniciado -]
     IP: ${server.address().address}
     PORT: ${server.address().port}
-    Presione -a para ver la lista de comandos\n
+    Presione -a para ver la lista de comandos
     `)
 })
 
@@ -280,14 +280,14 @@ server.on('listening', () => {
                 break;
             case '-a':
                 console.log('Lista de comandos:',
-                    '\n\n-lu: Listar usuarios registrados',
-                    '\n-lub: Listar usuarios baneados',
-                    '\n-dip: Elimina al usuario de la [IP] dada',
-                    '\n-dipall: Elimina a todos los usuarios del servidor',
-                    '\n-bip: Elimina y restrínge el acceso al usuario de la [IP] dada del servidor',
-                    '\n-aip: Elimina al usuario de la [IP] dada de la lista negra del servidor',
-                    '\n-s: Elimina a todos los usuarios conectados y apaga el servidor',
-                    '\n-a: Mostrar lista de comandos\n',
+                    '\n\n\t-lu: Listar usuarios registrados',
+                    '\n\t-lub: Listar usuarios baneados',
+                    '\n\t-dip: Elimina al usuario de la [IP] dada',
+                    '\n\t-dipall: Elimina a todos los usuarios del servidor',
+                    '\n\t-bip: Elimina y restrínge el acceso al usuario de la [IP] dada del servidor',
+                    '\n\t-aip: Elimina al usuario de la [IP] dada de la lista negra del servidor',
+                    '\n\t-s: Elimina a todos los usuarios conectados y apaga el servidor',
+                    '\n\t-a: Mostrar lista de comandos\n',
                 )
                 break;
             default: console.log('El comando no existe')
